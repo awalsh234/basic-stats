@@ -1,0 +1,582 @@
+---
+title: "penguin_basic_analysis"
+author: "Annie Walsh"
+date: "6/30/2025"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+---
+title: "intro-to-coding-2025"
+author: "Annie Walsh"
+date: "6/30/2025"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+## Default repo
+local({r <- getOption("repos")
+       r["CRAN"] <- "https://cran.r-project.org" 
+       options(repos=r)
+})
+```
+
+# R PACKAGES
+
+install and load the following packages in R: tidyverse, report, lme4, and ggplot2
+
+```{r}
+# Install Packages 
+install.packages("tidyverse")
+install.packages("report")
+install.packages("lme4")
+install.packages("ggplot2")
+
+# Load Packages
+library(tidyverse)
+library(report)
+library(lme4)
+library(ggplot2)
+
+```
+
+# Palmerpenguins Dataset
+
+The palmerpenguins data contains two datasets:
+
+The curated data, which contains size measurements for 344 penguins from three penguin species observed on three islands in the Palmer Archipelago, Antarctica.
+
+The raw data, which contains additional information about the penguins.
+
+References palmerpenguins data originally published in:
+
+Gorman KB, Williams TD, Fraser WR (2014). Ecological sexual dimorphism and environmental variability within a community of Antarctic penguins (genus Pygoscelis). PLoS ONE 9(3):e90081. https://doi.org/10.1371/journal.pone.0090081
+
+# Working Directories
+Use the getwd() command to find out where where my current working directory is.
+
+```{r}
+getwd()
+```
+
+# Specifying your Working Directory
+
+Store this file path in an object called “Path”.
+
+```{r}
+Path <-"/Users/annewalsh/Desktop/intro-to-coding-2025-main/data/"
+```
+
+
+Set working directory using the setwd() command. 
+
+```{r}
+setwd(Path) # Use the setwd() function to to assign the "Path" object that we created earlier as the working directory
+```
+
+# Loading Data
+
+```{r}
+penguins <- read.csv(file = "palmer-penguins.csv") #Load in the palmer-penguins CSV file and store it in a data frame called "penguins"")
+```
+
+Explore df
+
+```{r}
+View(penguins) #will open up the full data frame like you would in Excel
+head(penguins) #will show you a subset of rows within the Data Frame
+```
+
+sample_number – Represents the continuous numbering sequence for each sample where data was collected
+
+species – The three types of penguin species
+
+island – The three types of island
+
+bill_length_mm – A continuous number denoting bill length in millimeters
+
+bill_depth_mm – An integer denoting bill depth in millimeters
+
+flipper_length_mm – An integer denoting flipper length in millimeters
+
+body_mass_g – A continuous number denoting body mass in grams
+
+sex – Sex of the penguin
+
+year – Year when the study took place
+
+## Data Types in R
+Use glimpse() command from the tidyverse library to print out the data type for each column in the penguins data frame.
+
+```{r}
+glimpse(penguins)
+```
+
+# Subsetting data
+## Accessing rows and columns in a dataset
+
+Print out all the rows in the species column.
+
+```{r}
+penguins$species
+```
+
+
+Print out the second row in the species column. We can manually confirm this by opening up the penguins data frame and looking at the second row in the species column.
+
+```{r}
+penguins$species[2]
+```
+
+
+Pull certain rows and columns from that data frame
+
+```{r}
+penguins[1,] # print the first row across all 8 columns
+```
+
+```{r}
+penguins[,2] # print all the rows for column 2
+```
+
+```{r}
+penguins[1,2] # print the first row in column 2
+
+```
+
+
+## Subsetting Rows
+
+There are three species of penguins in this dataset: Adelie, Gentoo, and Chinstrap.
+
+Focus on penguins from the Adelie species.
+
+Filter() function to subset the rows that represent penguins from the Adelie species and store these rows in a new data frame called “penguins_adelie”.
+
+```{r}
+penguins_adelie <- penguins %>%
+  filter(species == "Adelie")
+```
+
+
+
+## Subsetting Columns
+
+Examine only bill length - use the select() function to assign the columns of interest (sample_number, species, island, bill_length_mm) into a new data frame called “penguins_bill_length”.
+
+```{r}
+penguins_bill_length <- penguins %>%
+  select(sample_number, species, island, bill_length_mm)
+```
+
+
+## Subsetting based on multiple conditions 
+
+Only interested in Adelie or Gentoo penguins, but not Chinstrap penguins.
+
+Tell R to subset all rows where species is equal to “Adelie” OR “Gentoo” and store it in a new data frame called “penguins_adelie_gentoo”.
+
+```{r}
+penguins_adelie_gentoo <- penguins %>%
+  filter(species == "Adelie" | species == "Gentoo")
+```
+
+
+Now - if interested in examining penguins from the Adelie species AND penguins that lived on Biscoe island.
+
+Tell R to subset all rows in the species column that are equal to “Adelie” AND all rows in the island column that are equal to “Biscoe” and store these rows in a new data frame called “penguins_adelie_biscoe”.
+
+```{r}
+penguins_adelie_biscoe <- penguins %>%
+  filter(species == "Adelie" & island == "Biscoe")
+```
+
+## Missing Data 
+
+Explore which rows had missing values (e.g., NA) or not - can use the is.na() function to determine which rows have missing values in the bill_length_mm column.
+
+```{r}
+is.na(penguins$bill_length_mm)
+```
+
+
+Now, to remove missing data (i.e., rows that are blank or have an ‘NA’ in it) from a data frame, can use the drop_na() function from the tidyverse library to create a new data frame called “penguins_complete” that only includes rows with no missing values in any columns.
+
+```{r}
+penguins_complete <- penguins %>%
+  drop_na()
+```
+
+Instead of removing rows that have a missing value in ANY column, can remove any rows that have a missing value in ONE specific column - again use the drop_na() function and specify the specific column that we want to remove rows with missing values from.
+
+Create a new data framed called “penguins_bill_length_complete” that only includes rows with no missing values in the bill_length_mm column.
+
+```{r}
+penguins_bill_length_complete <- penguins %>%
+  drop_na(bill_length_mm)
+```
+
+
+# Merging Data 
+
+Read in palmer-penguins_raw CSV file, which contains additional information about the penguins.
+
+```{r}
+penguins_raw <- read.csv(file = "palmer-penguins_raw.csv") #Load in the palmer-penguins_raw CSV file and store it in a data frame called "penguins_raw"
+
+```
+
+In the original penguins dataset that we’ve been working with, we can examine bill length (bill_length_mm) and flipper length (flipper_length_mm), but let’s say we were really interested in examining culmen (the ridge along the top part of a penguin’s bill) length. As we can see, the original penguins dataset does not have this information, but the palmer-penguins raw dataset does!
+
+We can combine these two data frames into one data frame, so that we have all the information in one place, and so that we can examine culmen length.
+
+Let’s use the merge() function to merge the original penguins data frame and the penguins_raw data frame into a new data frame called “penguins_merged”.
+
+Here’s the general structure of the merge() function.
+
+1) x and y: The two data frames you want to merge.
+
+2) by: The column(s) to merge on when the column name is the same in both data frames.
+
+```{r}
+penguins_merged <- merge(penguins, penguins_raw, by=c("sample_number", "species", "island", "flipper_length_mm", "body_mass_g", "sex"))
+
+```
+
+In our code, x and y represent the data frames we want to merge. All of the columns listed in the by=c expression represent the columns that are shared across both data frames (i.e., species, bill_length_mm, flipper_length_mm, body_mass_g, sex), so that R knows which columns we want to match across.
+
+In this way, R will then be able to match the columns that are NOT shared across the two data frames (i.e., bill_length_mm, bill_depth_mm, year, stage, clutch_competition, date_eg, culmen_length_mm, culmen_depth_mm, delta_15_n, delta_13_c, comments).
+
+Now we have all the information we need in one place!
+
+# Pivoting data from wide to long and long to wide
+Next we will learn how to pivot data from wide to long, and long to wide.
+
+Before we get started with pivoting, let’s subset a smaller data frame just to make it easier to work with.
+
+Let’s say we only wanted to focus on the length of different anatomical regions (i.e., bill, flipper, culmen). We can subset a data frame with the following columns: sample_number, species, island, bill_length_mm, flipper_length_mm, culmen_length_mm, and sex and store these columns in a new data frame called “penguins_length”.
+
+```{r}
+penguins_length <- penguins_merged %>%
+  select(sample_number, species, island, bill_length_mm, flipper_length_mm, culmen_length_mm, sex)
+```
+Perfect! Next let’s break down what it means to pivot data.
+
+## 12.1 Pivot a data frame from wide to long
+When data exists in a “wide” format, that means that each individual only has 1 row.
+
+When data exists in a “long” format, that means that each individual has more than 1 row (i.e., repeated-measures).
+
+For the purposes of understanding how to pivot data frames, we will be using the penguins_length data frame that we just created.
+
+In order to do many common statistical analyses, data needs to be in long format. For example, let’s say we wanted to show how bill, flipper, and culmen length differ across penguin species.
+
+If we wanted to make a graph to visualize this comparison (bill length vs flipper length vs culmen length), we could use the species column as our x-variable, but what would our Y variable be? There are 3 columns (1 for bill_length_mm, 1 for flipper_length_mm, and 1 for culmen_length_mm), but there is only 1 Y-variable. So as the data currently stands, we could not create a graph that shows these comparisons! We must pivot.
+
+The pivot_longer() function from the tidyr package in R can be used to pivot a data frame from a wide format to a long format.
+
+```{r}
+penguins_long <- penguins_length %>% pivot_longer(
+                        cols=c("bill_length_mm", "flipper_length_mm", "culmen_length_mm"), #The names of the columns to pivot
+                        names_to = "measure", #The name for the new character column
+                        values_to = "length") #The name for the new values column
+```
+
+Here, we did a basic pivot longer to convert the data from wide to long, where the new column that we created (measure) reflects the column names that we included in the cols=c argument of the pivot_longer function. The other new column that we created, length, reflects the values that existed in the columns that we included in the cols=c argument of the pivot_longer function.
+
+This data frame is in long format because each penguin has 3 rows (1 for bill length, 1 for flipper length, and 1 for culmen length)
+
+## 12.2 Pivot a data frame from long to wide
+Data can also be converted from long to wide!
+
+The pivot_wider() function from the tidyr package in R can be used to pivot a data frame from long format to wide format.
+
+Let’s work on pivoting the long data frame that we created back to its original wide format!
+
+```{r}
+
+#Pivot wider
+penguins_wide <- penguins_long %>% 
+  pivot_wider(names_from = measure, #names_from: The column whose values will be used as column names
+              values_from = length) #values_from: The column whose values will be used as cell values
+
+
+```
+
+Here, we converted the data frame from long back to its original wide format! We know it’s in wide format because each penguin now only has 1 row.
+
+By including the “measure” column in the “names_from” column, we are telling R that this is the column that will be used to generate column names. By including the “length” column in the “values_from” column, we are telling R that this is the column whose values will be used to generate row values.
+
+
+# Statistical analyses: T-tests, ANOVAs, and Linear Regressions
+
+## Cleaning data before analyses
+For analyses, will use the penguins_length data frame created earlier which includes the following columns: sample_number, species, island, bill_length_mm, flipper_length_mm, culmen_length_mm.
+
+Remove any rows with missing values in the data using the drop_na() function.
+
+```{r}
+penguins_length <- penguins_length %>% drop_na()
+
+```
+
+
+#13.2 T-Tests!
+
+QUESTION: Do Adelie and Gentoo penguins differ in flipper length?
+
+HYPOTHESIS: On average, Adelie and Gentoo penguins differ in flipper length.
+
+RELEVANT VARIABLES: Dependent variable: flipper_length_mm (numeric), Independent variable: species (Factor)
+
+ANALYSIS: Unpaired Two-Samples T-Test
+
+
+```{r}
+model1 <- t.test(x = penguins_length$flipper_length_mm[penguins_length$species == "Adelie"],
+                y = penguins_length$flipper_length_mm[penguins_length$species == "Gentoo"],
+                paired = FALSE,
+                alternative = "two.sided")
+
+#Print the model results
+model1
+```
+
+```{r}
+report(model1)
+```
+
+Hypothesis supported: 
+
+We see statistically significant differences, judging by the model output (t(251.35) = -33.51, p-value < .001). Since penguins from the Adelie species were our reference group, the negative value of the T-statistic indicates that the first group (Adelie) has a lower mean than the second group (Gentoo). In other words, on average, penguins from the Gentoo species have a longer flipper length than penguins from the Adelie species.
+
+
+## ANOVAs
+
+QUESTION: Does bill length differ across penguin species (i.e., Adelie, Gentoo, Chinstrap)?
+
+HYPOTHESIS: There are differences in bill length across penguin species.
+
+RELEVANT VARIABLES: Dependent variable: bill_length_mm (numeric) Independent variable: species (Factor)
+
+ANALYSIS: ANOVA
+
+
+```{r}
+model2 <- aov(bill_length_mm ~ species, data = penguins_length) #create ANOVA model and store in an object called model2
+
+#print summary of model results
+summary(model2)
+
+```
+
+```{r}
+report(model2)
+```
+
+It seems that the main effect of species has a significant effect on the length of bills, judging by the model output (F(2, 330) = 397.30, p-value < .001)
+
+
+#13.4 Linear regressions (Bivariate and Multivariate)
+
+QUESTION: Does bill length predict flipper length?
+
+HYPOTHESIS: As bill length increases, flipper length also increases.
+
+RELEVANT VARIABLES: Dependent variable: Flipper length (numeric) Independent variable: Bill length (numeric)
+
+ANALYSIS: Bivariate Linear Regression
+
+```{r}
+#Store bivariate linear regression in an object called "m1"
+m1 <- lm(flipper_length_mm ~ bill_length_mm, data = penguins_length) 
+```
+
+```{r}
+#Use summary() function to print summary for m1 bivariate linear model
+summary(m1) 
+```
+
+```{r}
+report(m1)
+```
+
+Linear regression results show that bill length statistically predicts flipper length, as observed by model output stats: (beta = 1.67, 95% CI [0.57, 0.73], t(331) = 15.69, p < .001).
+
+#13.5 Multivariate Linear Regression
+
+QUESTION: Does bill length predict flipper length when accounting for the effect of sex?
+
+HYPOTHESIS: Bill length still predicts flipper length when controlling for sex.
+
+RELEVANT VARIABLES: Dependent variable: flipper length (numeric) Independent variables: Bill length (numeric) and sex (factor)
+
+ANALYSIS: Multivariate Linear Regression
+
+```{r}
+#Store multivariate linear regression in an object called "m2
+m2 <- lm(flipper_length_mm ~ bill_length_mm + sex, data = penguins_length)
+```
+
+```{r}
+#Use summary() function to print summary for m2 multivariate linear model
+summary(m2) 
+```
+
+```{r}
+#Use report() function to print report for m2 multivariate linear model
+report(m2)
+```
+
+Linear regression results show that bill length still statistically predicts flipper length when accounting for differences in sex, as observed by model output stats for the effect of bill length: (beta = 1.64, 95% CI [1.42, 1.87], t(330) = 14.46, p < .001).
+
+
+# Visualizing data
+
+## Histograms
+Genereate a histogram to visualize our dataset and see the distribution of flipper length and color code it by penguin species. 
+
+```{r}
+ggplot(penguins_length, aes(x=flipper_length_mm, fill=species)) + geom_histogram()
+
+```
+
+## Bar plots with standard error bars
+
+First need to run the summarySE() function that will calculate the standard error for our dependent variable (bill length).
+
+
+```{r}
+## Gives count, mean, standard deviation, standard error of the mean, and confidence interval (default 95%).
+##   data: a data frame.
+##   measurevar: the name of a column that contains the variable to be summariezed
+##   groupvars: a vector containing names of columns that contain grouping variables
+##   na.rm: a boolean that indicates whether to ignore NA's
+##   conf.interval: the percent range of the confidence interval (default is 95%)
+summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
+                      conf.interval=.95, .drop=TRUE) {
+    library(plyr)
+
+    # New version of length which can handle NA's: if na.rm==T, don't count them
+    length2 <- function (x, na.rm=FALSE) {
+        if (na.rm) sum(!is.na(x))
+        else       length(x)
+    }
+
+    # This does the summary. For each group's data frame, return a vector with
+    # N, mean, and sd
+    datac <- ddply(data, groupvars, .drop=.drop,
+      .fun = function(xx, col) {
+        c(N    = length2(xx[[col]], na.rm=na.rm),
+          mean = mean   (xx[[col]], na.rm=na.rm),
+          sd   = sd     (xx[[col]], na.rm=na.rm)
+        )
+      },
+      measurevar
+    )
+
+    # Rename the "mean" column    
+    datac <- plyr::rename(datac, c("mean" = measurevar))
+
+    datac$se <- datac$sd / sqrt(datac$N)  # Calculate standard error of the mean
+
+    # Confidence interval multiplier for standard error
+    # Calculate t-statistic for confidence interval: 
+    # e.g., if conf.interval is .95, use .975 (above/below), and use df=N-1
+    ciMult <- qt(conf.interval/2 + .5, datac$N-1)
+    datac$ci <- datac$se * ciMult
+
+    return(datac)
+}
+```
+
+#Calculating the standard error
+Now that we have the summarySE() function loaded in, we can calculate the standard error of bill length for each penguin species.
+
+Below, we will use the summarySE() function where the measurevar argument reflects our dependent variable (bill_length_mm) and the groupvars argument reflects our independent variable (species).
+
+```{r}
+# summarySE provides the standard deviation, standard error of the mean, and a (default 95%) confidence interval
+penguins_length.se <- summarySE(penguins_length, measurevar="bill_length_mm", groupvars=c("species"))
+```
+
+Now that we have the standard errors calculated, let’s make a bar plot with standard errors to compare bill length across the three penguin species.
+
+```{r}
+ggplot(penguins_length.se, aes(x = species, y = bill_length_mm, fill = species)) + #Plot the variables using the penguins_length.se data frame
+      geom_bar(stat="identity") + #Use the geom_bar() function to generate a bar plot
+      geom_errorbar(aes(ymin=bill_length_mm-se, ymax=bill_length_mm+se), #Use the geom_errorbar() function to plot the standard error bars
+                  width=.2, # Define the width of the error bars
+                  position=position_dodge(.9)) 
+```
+
+
+# Scatterplot with linear regression line
+
+We can use a scatterplot to visualize this relationship and add a linear regression line to the plot.
+
+```{r}
+ggplot(penguins_length, aes(x=bill_length_mm, y=flipper_length_mm)) + #Plot the variables we are interested in
+   geom_point() + #geom_point() is the function used to create scatter plots
+   geom_smooth(method=lm, color="black")  #Adds a linear regression line to your plot
+```
+
+
+# Tidy pipeline
+
+```{r}
+#Step 1: Load the R packages you will be working with (this assumes that you've previously installed the R packages).
+library(tidyverse)
+library(report)
+library(lme4)
+library(ggplot2)
+
+#Step 2: Read the data into R
+penguins <- read.csv(file = "palmer-penguins.csv") #Load in the penguins CSV file and store it in a data frame called "penguins"
+
+#Step 3: Subset the columns you are interested in using the select() function
+penguins_length_pipeline <- penguins %>%
+  select(sample_number, species, island, bill_length_mm, flipper_length_mm)
+
+#Step 4: Pivot data frame from wide to long
+penguins_pipeline_long <- penguins_length_pipeline %>% pivot_longer(
+                        cols=c("bill_length_mm", "flipper_length_mm"), #The names of the columns to pivot
+                        names_to = "anatomical_region", #The name for the new character column
+                        values_to = "length") #The name for the new values column
+
+#Step 5: Clean your data and remove any rows with missing values
+penguins_pipeline_long <- penguins_pipeline_long %>% drop_na()
+
+
+#Step 6: Run a t-test to determine whether bill length significantly differs from flipper length
+model2 <- t.test(x = penguins_pipeline_long$length[penguins_pipeline_long$anatomical_region == "bill_length_mm"],
+                y = penguins_pipeline_long$length[penguins_pipeline_long$anatomical_region == "flipper_length_mm"],
+                paired = FALSE,
+                alternative = "two.sided")
+
+#Step 7: Interpret results of t-test output
+report(model2)
+
+#Step 8: Calculate the standard errors before plotting
+#summarySE provides the standard deviation, standard error of the mean, and a (default 95%) confidence interval
+penguins_pipeline_long.se <- summarySE(penguins_pipeline_long, measurevar="length", groupvars=c("anatomical_region"))
+
+#Step 9: Create bar plot with standard error bars to visualize t-test
+ggplot(penguins_pipeline_long.se, aes(x = anatomical_region, y = length, fill = anatomical_region)) + 
+      geom_bar(stat="identity") +
+      geom_errorbar(aes(ymin=length-se, ymax=length+se), 
+                  width=.2, 
+                  position=position_dodge(.9)) 
+
+#Step 10: All done!!!
+```
+
+
